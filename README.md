@@ -1,98 +1,88 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# amoCRM Widget
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+## Описание
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+Разработка backend-интеграции для amoCRM на NestJS.
 
-## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+# План разработки
 
-## Project setup
+## Задача 1. Интеграция с amoCRM
 
-```bash
-$ npm install
-```
+Интеграция будет принимать от amo хук на установку, получать токены и сохранять в базе аккаунт, если есть обновлять. При хуке на удаление значения токенов должны быть null и isInstalled быть false. Также должен быть реализован метод обновления токенов по Cron, который будет каждые 12 часов обновлять всем аккаунтам токены. Для работы с amo api нужно реализовать отдельный модуль.
 
-## Compile and run the project
+### Модель Account
 
-```bash
-# development
-$ npm run start
+| Поле | Тип | Описание |
+|------|-----|----------|
+| accountId | number | Уникальный идентификатор аккаунта amoCRM |
+| subdomain | string | Поддомен аккаунта |
+| accessToken | string | Access Token |
+| refreshToken | string | Refresh Token |
+| isInstalled | boolean | Признак установленного виджета |
 
-# watch mode
-$ npm run start:dev
+---
 
-# production mode
-$ npm run start:prod
-```
+## Задача 2. Пользовательские поля
 
-## Run tests
+После этого надо выгрузить из amo кастомные поля и проверить, есть ли там нужные нам, все поля которых нет, надо создать, затем сохранить все нужные нам поля в базу данных и сохранить связь с моделью Аккаунт в базе данных, т.к. у каждого аккаунта свои id кастомных полей.
 
-```bash
-# unit tests
-$ npm run test
+### Поля контакта
 
-# e2e tests
-$ npm run test:e2e
+| Поле | Тип |
+|------|-----|
+| Дата рождения | Дата |
+| Возраст | Число |
+| Лазерное омоложение лица | Число |
+| Ультразвуковой лифтинг | Число |
+| Лазерное удаление сосудов | Число |
+| Коррекция мимических морщин | Число |
+| Лазерная эпиляция | Число |
 
-# test coverage
-$ npm run test:cov
-```
+### Поля сделки
 
-## Deployment
+| Поле | Тип |
+|------|-----|
+| Услуги | Мультисписок |
+| Бюджет | Стандартное поле amoCRM (Число) |
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+### Модель CustomField
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+| Поле | Описание |
+|------|----------|
+| fieldType | Тип поля amoCRM |
+| fieldId | ID поля в amoCRM |
+| fieldName | Уникальное название поля |
+| accountId | ID аккаунта в базе |
 
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
+---
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+## Задача 3. Вебхуки
 
-## Resources
+Посредством amo api проверить стоят ли вебхуки в amo на события: “Контакт добавлен”, “Контакт изменен”, “Сделка добавлена”, “Сделка изменена”, если нет установить.
 
-Check out a few resources that may come in handy when working with NestJS:
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+---
 
-## Support
+## Задача 4. Работа с контактами
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+Добавить модуль работы с контактами, со следующим функционалом:
+При получении хука на добавление или изменение контакта, проверяется заполнено ли поле “Дата рождения” и если не заполнено, то ничего не делаем иначе подсчитываем возраст и обновляем поле “Возраст”, учесть что тк мы изменим поля контакта, нам снова придет вебхук о изменении
 
-## Stay in touch
+---
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+## Задача 5. Работа со сделками
 
-## License
+Добавить модуль работы со сделками, со следующим функционалом:
+При получении хука на добавление или изменение сделки проверяем выбраны ли услуги в кастомном поле, если да, то получаем данные привязанного к сделке основного контакта (если есть) и смотрим заполнены ли у него поля нужных нам услуг.
+1. если есть незаполненные поля то надо создать задачу (id задачи типа “ошибка” должен быть определен в env) с текстом “У контакта не заполнены поля услуг: [перечислить выбранные услуги у которых не заполнены поля]” (если такая задача уже есть, то мы не создаем, а обновляем ее текст если требуется), дедлайн задачи 24 часа
+2. если не заполнено поле возраст, то посмотреть можем ли мы его заполнить
+   если да, то вызвать алгоритм обработки возраста контакта
+   если нет, то надо создать задачу (id задачи типа “ошибка” должен быть определен в env, если такая задача есть, то ничего не делаем) с текстом “Возраст контакта неизвестен”, дедлайн 24 часа
+3. если все поля заполнены, то подсчитываем стоимость услуг, обновляем поле “Бюджет” и ставим задачу (id задачи типа “проверить” должен быть определен в env, если такая задача есть, обновляем если требуется) с текстом “Проверить стоимость услуг для [Название контакта], возраст: [Возраст контакта]”, дедлайн 24 часа
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+Все задачи создаются для карточки “Сделка”. ID для задач должны быть определены в env, для тестов можно использовать: дефолтные амовские id 0 и 1; или самому создать в амо нужные типы задач и использовать их id
+
+## Задача 6. Docker
+
+Создать папку docker-compose и в ней файл для поднятия приложения и базы, также для docker-compose файла надо описать env example, которй будет использоваться для запуска и содержать все данные нужные как для запуска приложения так и для запуска базы. У базы должен быть определен volume, чтобы данные не терялись. 
