@@ -1,0 +1,57 @@
+import { Injectable } from '@nestjs/common';
+import type { AmoResponse, AccountInstallRDO } from './RDO/oauth.rdo';
+import { ConfigService } from '@nestjs/config';
+import { AccountRepository } from './account.repository';
+import { AmoService } from '../amo/amo.service';
+import { Cron, CronExpression } from '@nestjs/schedule';
+
+@Injectable()
+export class AccountService {
+    constructor(
+        private readonly configService: ConfigService,
+        private readonly repository: AccountRepository,
+        private readonly amoService: AmoService
+    ) {}
+
+    public async install(query: AccountInstallRDO): Promise<AmoResponse> {
+        const { code, referer, client_id } = query;
+        const subdomain = this.getSubdomainReferer(referer);
+        const tokens = await this.amoService.getTokens(code, subdomain);
+        await this.repository.saveTokens({
+            accountId: client_id,
+            subdomain: subdomain,
+            accessToken: tokens.access_token,
+            refreshToken: tokens.refresh_token,
+            isInstalled: true,
+        });
+
+        return {
+            success: true,
+            message: 'ok',
+        };
+    }
+
+    public async uninstall(clientId: string): Promise<AmoResponse> {
+        await this.repository.clearTokens(clientId);
+        return {
+            success: true,
+            message: 'ok',
+        };
+    }
+
+    private getSubdomainReferer(referer: string): string {
+        return referer.split('.')[0];
+    }
+
+    @Cron(CronExpression.EVERY_12_HOURS)
+    public async refreshAccountsTokens(): Promise<void> {
+        const accounts = await this.repository.findInstalledAccounts();
+        for (const account of accounts) {
+            if (!account.refreshToken) {
+                continue;
+            }
+            const tokens = await this.amoService.refreshTokens(account.subdomain, account.refreshToken);
+            await this.repository.updateTokens(account.accountId, tokens.access_token, tokens.refresh_token);
+        }
+    }
+}
