@@ -5,9 +5,10 @@ import { AccountService } from './account.service';
 import { AccountRepository } from './account.repository';
 import { Account } from './account.model';
 import { AmoModule } from '../amo/amo.module';
+import { CustomFieldModule } from '../custom-field/custom-field.module';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([Account]), AmoModule],
+    imports: [TypeOrmModule.forFeature([Account]), AmoModule, CustomFieldModule],
     controllers: [AccountController],
     providers: [AccountService, AccountRepository],
 })

@@ -3,6 +3,8 @@ import { Env } from '../../core/enums/env.enum';
 import { AmoRefreshResponse, AmoTokenResponse, TokenRequest } from './RDO/oauth.rdo';
 import axios from 'axios';
 import { Injectable } from '@nestjs/common';
+import { AmoEntity } from '../../core/enums/amo-entity.enum';
+import { AmoCustomFieldRDO } from '../custom-field/RDO/custom-field.rdo';
 
 @Injectable()
 export class AmoService {
@@ -30,6 +32,41 @@ export class AmoService {
             redirect_uri: this.configService.getOrThrow<string>(Env.AmoRedirectUri),
             ...tokenData,
         });
-        return data as T;
+        return data;
+    }
+
+    public async getCustomFields(subdomain: string, accessToken: string, entityType: AmoEntity): Promise<AmoCustomFieldRDO> {
+        const url = `https://${subdomain}.amocrm.ru/api/v4/${entityType}/custom_fields`;
+        const { data } = await axios.get<AmoCustomFieldRDO>(url, {
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+            },
+        });
+        return data;
+    }
+
+    public async createCustomField(
+        subdomain: string,
+        accessToken: string,
+        entityType: AmoEntity,
+        name: string,
+        type: string
+    ): Promise<AmoCustomFieldRDO> {
+        const url = `https://${subdomain}.amocrm.ru/api/v4/${entityType}/custom_fields`;
+        const { data } = await axios.post<AmoCustomFieldRDO>(
+            url,
+            [
+                {
+                    name,
+                    type,
+                },
+            ],
+            {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                },
+            }
+        );
+        return data;
     }
 }
