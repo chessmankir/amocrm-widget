@@ -4,7 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { AccountRepository } from './account.repository';
 import { AmoService } from '../amo/amo.service';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { AccountInstallDto } from './DTO/account-install.dto';
+import { AccountInstallDTO } from './DTO/account-install.dto';
 
 @Injectable()
 export class AccountService {
@@ -14,7 +14,7 @@ export class AccountService {
         private readonly amoService: AmoService
     ) {}
 
-    public async install(query: AccountInstallDto): Promise<AmoRDO> {
+    public async install(query: AccountInstallDTO): Promise<AmoRDO> {
         const { code, referer, client_id } = query;
         const subdomain = this.getSubdomainReferer(referer);
         const tokens = await this.amoService.getTokens(code, subdomain);
