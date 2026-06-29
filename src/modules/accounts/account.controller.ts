@@ -1,19 +1,21 @@
 import { AccountService } from './account.service';
 import { Controller, Get, Query } from '@nestjs/common';
-import type { AccountInstallRDO, AccountUninstallRDO, AmoResponse } from './RDO/oauth.rdo';
+import type { AmoRDO } from './RDO/oauth.rdo';
 import { Endpoints } from '../../core/constansts/endpoints';
+import { AccountInstallDto } from './DTO/account-install.dto';
+import { AccountUninstallDTO } from './DTO/account-uninstall.dto';
 
 @Controller(Endpoints.Oauth.Base)
 export class AccountController {
     constructor(private readonly accountService: AccountService) {}
 
     @Get(Endpoints.Oauth.Install)
-    public async install(@Query() query: AccountInstallRDO): Promise<AmoResponse> {
+    public async install(@Query() query: AccountInstallDto): Promise<AmoRDO> {
         return this.accountService.install(query);
     }
 
     @Get(Endpoints.Oauth.Uninstall)
-    public async uninstall(@Query() query: AccountUninstallRDO): Promise<AmoResponse> {
+    public async uninstall(@Query() query: AccountUninstallDTO): Promise<AmoRDO> {
         console.log(JSON.stringify(query, null, 2));
         if (!query.client_uuid) {
             return {

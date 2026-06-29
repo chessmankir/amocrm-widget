@@ -1,6 +1,6 @@
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { SaveTokenDTO } from './DTO/save-token.dto';
+import { SaveToken } from './types/save-token';
 import { Account } from './account.model';
 
 export class AccountRepository {
@@ -9,14 +9,14 @@ export class AccountRepository {
         private readonly repository: Repository<Account>
     ) {}
 
-    public async saveTokens(dto: SaveTokenDTO): Promise<Account> {
-        await this.repository.upsert(dto, {
+    public async saveTokens(saveToken: SaveToken): Promise<Account> {
+        await this.repository.upsert(saveToken, {
             conflictPaths: ['accountId'],
         });
 
         return this.repository.findOneOrFail({
             where: {
-                accountId: dto.accountId,
+                accountId: saveToken.accountId,
             },
         });
     }

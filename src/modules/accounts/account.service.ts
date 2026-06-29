@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import type { AmoResponse, AccountInstallRDO } from './RDO/oauth.rdo';
+import type { AmoRDO } from './RDO/oauth.rdo';
 import { ConfigService } from '@nestjs/config';
 import { AccountRepository } from './account.repository';
 import { AmoService } from '../amo/amo.service';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { AccountInstallDto } from './DTO/account-install.dto';
 
 @Injectable()
 export class AccountService {
@@ -13,7 +14,7 @@ export class AccountService {
         private readonly amoService: AmoService
     ) {}
 
-    public async install(query: AccountInstallRDO): Promise<AmoResponse> {
+    public async install(query: AccountInstallDto): Promise<AmoRDO> {
         const { code, referer, client_id } = query;
         const subdomain = this.getSubdomainReferer(referer);
         const tokens = await this.amoService.getTokens(code, subdomain);
@@ -31,7 +32,7 @@ export class AccountService {
         };
     }
 
-    public async uninstall(clientId: string): Promise<AmoResponse> {
+    public async uninstall(clientId: string): Promise<AmoRDO> {
         await this.repository.clearTokens(clientId);
         return {
             success: true,

@@ -11,7 +11,7 @@
         "стажировка",
         "amocrm",
         "reon"
-    ]
+    ],
     "engines": "node v24",
     "private": true,
     "license": "UNLICENSED",
