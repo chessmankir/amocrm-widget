@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { Env } from './core/enums/env.enum';
 import Joi from 'joi';
-import { AccountModule } from './modules/accounts/account.module';
 import { ScheduleModule } from '@nestjs/schedule';
-import { AppConfigSchema } from './app/app.schema';
+import { Env } from '../core/enums/env.enum';
+import { AppConfigSchema } from './app.schema';
+import { AccountModule } from '../modules/accounts/account.module';
 
 @Module({
     imports: [
