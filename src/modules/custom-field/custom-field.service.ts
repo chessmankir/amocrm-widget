@@ -20,9 +20,10 @@ export class CustomFieldService {
         requiredField: RequiredCustomField,
         fields: AmoCustomField[]
     ): Promise<AmoCustomField> {
-        const existingField = fields.find((field) => field.name === requiredField.name && field.type === requiredField.type);
+        const existingField = await this.getExistingAmoField(account.id, requiredField, fields);
 
         if (existingField) {
+            await this.updateFieldEnumsIfNeeded(account, entityType, existingField, requiredField);
             return existingField;
         }
 
@@ -35,7 +36,8 @@ export class CustomFieldService {
             account.accessToken,
             entityType,
             requiredField.name,
-            requiredField.type
+            requiredField.type,
+            requiredField.enums
         );
 
         const createField = createFieldResponse._embedded?.custom_fields?.[0];
@@ -43,6 +45,33 @@ export class CustomFieldService {
             throw new Error(`Custom field ${requiredField.name} was not created`);
         }
         return createField;
+    }
+
+    private async getExistingAmoField(
+        accountId: number,
+        requiredField: RequiredCustomField,
+        fields: AmoCustomField[]
+    ): Promise<AmoCustomField | null> {
+        const existingFields = fields.filter((field) => field.name === requiredField.name && field.type === requiredField.type);
+
+        if (!existingFields.length) {
+            return null;
+        }
+
+        if (existingFields.length === 1) {
+            return existingFields[0];
+        }
+
+        const fieldFromBase = await this.customFieldRepository.findByAccountIdAndFieldName(accountId, requiredField.name);
+        if (fieldFromBase) {
+            const matchedField = existingFields.find((field) => field.id === fieldFromBase.fieldId);
+
+            if (matchedField) {
+                return matchedField;
+            }
+        }
+
+        return existingFields[0];
     }
 
     private async syncFieldsByEntity(account: Account, entityType: AmoEntity): Promise<void> {
@@ -68,5 +97,29 @@ export class CustomFieldService {
         }
         await this.syncFieldsByEntity(account, AmoEntity.Contacts);
         await this.syncFieldsByEntity(account, AmoEntity.Leads);
+    }
+
+    private async updateFieldEnumsIfNeeded(
+        account: Account,
+        entityType: AmoEntity,
+        existingField: AmoCustomField,
+        requiredField: RequiredCustomField
+    ): Promise<void> {
+        if (!requiredField.enums?.length) {
+            return;
+        }
+
+        const existingEnums = existingField.enums ?? [];
+        const existringValues = existingEnums.map((item) => item.value);
+
+        const missedEnums = requiredField.enums.filter((option) => !existringValues.includes(option));
+
+        if (!missedEnums.length) {
+            return;
+        }
+
+        await this.amoService.updateCustomField(account.subdomain, account.accessToken!, entityType, existingField.id, {
+            enums: [...existingEnums.map((item) => ({ value: item.value })), ...missedEnums.map((value) => ({ value }))],
+        });
     }
 }

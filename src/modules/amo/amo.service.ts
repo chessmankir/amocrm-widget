@@ -5,6 +5,8 @@ import axios from 'axios';
 import { Injectable } from '@nestjs/common';
 import { AmoEntity } from '../../core/enums/amo-entity.enum';
 import { AmoCustomFieldRDO } from '../custom-field/RDO/custom-field.rdo';
+import { AmoCreateCustomField } from '../custom-field/types/custom-field.type';
+import { AmoCustomFieldType } from '../custom-field/types/custom-field.enum';
 
 @Injectable()
 export class AmoService {
@@ -50,23 +52,42 @@ export class AmoService {
         accessToken: string,
         entityType: AmoEntity,
         name: string,
-        type: string
+        type: AmoCustomFieldType,
+        enums?: string[]
     ): Promise<AmoCustomFieldRDO> {
         const url = `https://${subdomain}.amocrm.ru/api/v4/${entityType}/custom_fields`;
-        const { data } = await axios.post<AmoCustomFieldRDO>(
-            url,
-            [
-                {
-                    name,
-                    type,
-                },
-            ],
-            {
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                },
-            }
-        );
+
+        const fieldData: AmoCreateCustomField = {
+            name,
+            type,
+        };
+
+        if (enums?.length) {
+            fieldData.enums = enums.map((option) => ({ value: option }));
+        }
+        const { data } = await axios.post<AmoCustomFieldRDO>(url, [fieldData], {
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+            },
+        });
+        return data;
+    }
+
+    public async updateCustomField(
+        subdomain: string,
+        accessToken: string,
+        entityType: AmoEntity,
+        fieldId: number,
+        fieldData: Partial<AmoCreateCustomField>
+    ): Promise<AmoCustomFieldRDO> {
+        const url = `https://${subdomain}.amocrm.ru/api/v4/${entityType}/custom_fields/${fieldId}`;
+
+        const { data } = await axios.patch<AmoCustomFieldRDO>(url, fieldData, {
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+            },
+        });
+
         return data;
     }
 }

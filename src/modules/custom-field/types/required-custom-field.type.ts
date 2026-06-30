@@ -5,4 +5,5 @@ export type RequiredCustomField = {
     name: string;
     type: AmoCustomFieldType;
     entity_type: AmoEntity;
+    enums?: string[];
 };
