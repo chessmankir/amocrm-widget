@@ -1,5 +1,6 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+
 import { AccountController } from './account.controller';
 import { AccountService } from './account.service';
 import { AccountRepository } from './account.repository';
@@ -9,8 +10,9 @@ import { WebhookModule } from '../webhooks/webhook.module';
 import { CustomFieldModule } from '../custom-field/custom-field.module';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([Account]), AmoModule, WebhookModule, CustomFieldModule],
+    imports: [TypeOrmModule.forFeature([Account]), AmoModule, CustomFieldModule, forwardRef(() => WebhookModule)],
     controllers: [AccountController],
     providers: [AccountService, AccountRepository],
+    exports: [AccountService, AccountRepository],
 })
 export class AccountModule {}

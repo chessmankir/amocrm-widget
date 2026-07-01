@@ -58,4 +58,12 @@ export class AccountRepository {
             }
         );
     }
+
+    public async getAmoAccount(subdomain: string): Promise<Account | null> {
+        return this.repository.findOne({
+            where: {
+                subdomain,
+            },
+        });
+    }
 }
