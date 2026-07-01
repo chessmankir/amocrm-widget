@@ -6,6 +6,7 @@ import Joi from 'joi';
 import { AccountModule } from './modules/accounts/account.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { AppConfigSchema } from './app/app.schema';
+import { CustomFieldModule } from './modules/custom-field/custom-field.module';
 
 @Module({
     imports: [
@@ -39,6 +40,7 @@ import { AppConfigSchema } from './app/app.schema';
         }),
         ScheduleModule.forRoot(),
         AccountModule,
+        CustomFieldModule,
     ],
 })
 export class AppModule {}
