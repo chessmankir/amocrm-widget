@@ -21,6 +21,7 @@ import { AccountModule } from '../modules/accounts/account.module';
                 [Env.PostgresUser]: Joi.string().required(),
                 [Env.PostgresPassword]: Joi.string().required(),
                 [Env.PostgresDb]: Joi.string().required(),
+                [Env.AmoWebhookBaseUrl]: Joi.string().required(),
             }),
         }),
         TypeOrmModule.forRootAsync({

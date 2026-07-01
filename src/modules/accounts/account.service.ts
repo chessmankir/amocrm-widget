@@ -5,6 +5,7 @@ import { AccountRepository } from './account.repository';
 import { AmoService } from '../amo/amo.service';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { AccountInstallDTO } from './DTO/account-install.dto';
+import { WebhookService } from '../webhooks/webhook.service';
 import { CustomFieldService } from '../custom-field/custom-field.service';
 
 @Injectable()
@@ -13,6 +14,7 @@ export class AccountService {
         private readonly configService: ConfigService,
         private readonly repository: AccountRepository,
         private readonly amoService: AmoService,
+        private readonly webhookService: WebhookService,
         private readonly customFieldService: CustomFieldService
     ) {}
 
@@ -28,6 +30,7 @@ export class AccountService {
             isInstalled: true,
         });
 
+        await this.webhookService.syncAccountWebhooks(account);
         await this.customFieldService.syncAccountCustomFields(account);
 
         return {
