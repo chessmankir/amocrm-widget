@@ -3,6 +3,7 @@ import { Env } from '../../core/enums/env.enum';
 import { AmoRefreshResponse, AmoTokenResponse, TokenRequest } from './RDO/oauth.rdo';
 import axios from 'axios';
 import { Injectable } from '@nestjs/common';
+import { WebhookListRDO } from '../webhooks/RDO/webhook.rdo';
 
 @Injectable()
 export class AmoService {
@@ -31,5 +32,34 @@ export class AmoService {
             ...tokenData,
         });
         return data as T;
+    }
+
+    public async getWebhooks(subdomain: string, accessToken: string): Promise<WebhookListRDO> {
+        const url = `https://${subdomain}.amocrm.ru/api/v4/webhooks`;
+        const { data } = await axios.get<WebhookListRDO>(url, {
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+            },
+        });
+        console.log(JSON.stringify(data, null, 2));
+        return data;
+    }
+
+    public async createWebhook(subdomain: string, accessToken: string, destination: string, settings: string[]): Promise<any> {
+        const url = `https://${subdomain}.amocrm.ru/api/v4/webhooks`;
+        const { data } = await axios.post(
+            url,
+            {
+                destination,
+                settings,
+            },
+            {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                },
+            }
+        );
+        console.log(data);
+        return data;
     }
 }

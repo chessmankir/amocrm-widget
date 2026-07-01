@@ -10,4 +10,5 @@ export type AppConfigSchema = {
     [Env.PostgresUser]: string;
     [Env.PostgresPassword]: string;
     [Env.PostgresDb]: string;
+    [Env.AmoWebhookBaseUrl]: string;
 };

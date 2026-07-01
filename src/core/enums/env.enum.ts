@@ -7,4 +7,5 @@ export enum Env {
     PostgresUser = 'POSTGRES_USER',
     PostgresPassword = 'POSTGRES_PASSWORD',
     PostgresDb = 'POSTGRES_DB',
+    AmoWebhookBaseUrl = 'AMO_WEBHOOK_BASE_URL',
 }

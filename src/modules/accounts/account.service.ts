@@ -5,26 +5,30 @@ import { AccountRepository } from './account.repository';
 import { AmoService } from '../amo/amo.service';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { AccountInstallDTO } from './DTO/account-install.dto';
+import { WebhookService } from '../webhooks/webhook.service';
 
 @Injectable()
 export class AccountService {
     constructor(
         private readonly configService: ConfigService,
         private readonly repository: AccountRepository,
-        private readonly amoService: AmoService
+        private readonly amoService: AmoService,
+        private readonly webhookService: WebhookService
     ) {}
 
     public async install(query: AccountInstallDTO): Promise<AmoRDO> {
         const { code, referer, client_id } = query;
         const subdomain = this.getSubdomainReferer(referer);
         const tokens = await this.amoService.getTokens(code, subdomain);
-        await this.repository.saveTokens({
+        const account = await this.repository.saveTokens({
             accountId: client_id,
             subdomain: subdomain,
             accessToken: tokens.access_token,
             refreshToken: tokens.refresh_token,
             isInstalled: true,
         });
+
+        await this.webhookService.syncAccountWebhooks(account);
 
         return {
             success: true,
