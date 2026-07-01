@@ -4,6 +4,10 @@ import { AmoRefreshResponse, AmoTokenResponse, TokenRequest } from './RDO/oauth.
 import axios from 'axios';
 import { Injectable } from '@nestjs/common';
 import { WebhookListRDO } from '../webhooks/RDO/webhook.rdo';
+import { AmoEntity } from '../../core/enums/amo-entity.enum';
+import { AmoCustomFieldRDO } from '../custom-field/RDO/custom-field.rdo';
+import { AmoCreateCustomField } from '../custom-field/types/custom-field.type';
+import { AmoCustomFieldType } from '../custom-field/types/custom-field.enum';
 
 @Injectable()
 export class AmoService {
@@ -31,7 +35,61 @@ export class AmoService {
             redirect_uri: this.configService.getOrThrow<string>(Env.AmoRedirectUri),
             ...tokenData,
         });
-        return data as T;
+        return data;
+    }
+
+    public async getCustomFields(subdomain: string, accessToken: string, entityType: AmoEntity): Promise<AmoCustomFieldRDO> {
+        const url = `https://${subdomain}.amocrm.ru/api/v4/${entityType}/custom_fields`;
+        const { data } = await axios.get<AmoCustomFieldRDO>(url, {
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+            },
+        });
+        return data;
+    }
+
+    public async createCustomField(
+        subdomain: string,
+        accessToken: string,
+        entityType: AmoEntity,
+        name: string,
+        type: AmoCustomFieldType,
+        enums?: string[]
+    ): Promise<AmoCustomFieldRDO> {
+        const url = `https://${subdomain}.amocrm.ru/api/v4/${entityType}/custom_fields`;
+
+        const fieldData: AmoCreateCustomField = {
+            name,
+            type,
+        };
+
+        if (enums?.length) {
+            fieldData.enums = enums.map((option) => ({ value: option }));
+        }
+        const { data } = await axios.post<AmoCustomFieldRDO>(url, [fieldData], {
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+            },
+        });
+        return data;
+    }
+
+    public async updateCustomField(
+        subdomain: string,
+        accessToken: string,
+        entityType: AmoEntity,
+        fieldId: number,
+        fieldData: Partial<AmoCreateCustomField>
+    ): Promise<AmoCustomFieldRDO> {
+        const url = `https://${subdomain}.amocrm.ru/api/v4/${entityType}/custom_fields/${fieldId}`;
+
+        const { data } = await axios.patch<AmoCustomFieldRDO>(url, fieldData, {
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+            },
+        });
+
+        return data;
     }
 
     public async getWebhooks(subdomain: string, accessToken: string): Promise<WebhookListRDO> {

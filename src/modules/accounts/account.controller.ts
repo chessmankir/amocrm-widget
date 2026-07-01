@@ -16,7 +16,6 @@ export class AccountController {
 
     @Get(Endpoints.Oauth.Uninstall)
     public async uninstall(@Query() query: AccountUninstallDTO): Promise<AmoRDO> {
-        console.log(JSON.stringify(query, null, 2));
         if (!query.client_uuid) {
             return {
                 success: false,
