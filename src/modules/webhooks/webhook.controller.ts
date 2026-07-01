@@ -1,24 +1,25 @@
 import { Body, Controller, Post } from '@nestjs/common';
+import { Endpoints } from '../../core/constansts/endpoints';
 
-@Controller('webhooks')
+@Controller(Endpoints.Webhook.Base)
 export class WebhookController {
-    @Post('contact/add')
+    @Post(Endpoints.Webhook.ContactAdd)
     //Unknown потому что пока заглушка. в следующей задаче будет реализация
     public async contactAdded(@Body() body: unknown): Promise<void> {
         console.log('contactAdded');
     }
 
-    @Post('contact/update')
+    @Post(Endpoints.Webhook.ContactUpdate)
     public async contactUpdated(@Body() body: unknown): Promise<void> {
         console.log('contactUpdated');
     }
 
-    @Post('lead/add')
+    @Post(Endpoints.Webhook.LeadAdd)
     public async leadAdded(@Body() body: unknown): Promise<void> {
         console.log('leadAdded');
     }
 
-    @Post('lead/update')
+    @Post(Endpoints.Webhook.LeadUpdate)
     public async leadUpdated(@Body() body: unknown): Promise<void> {
         console.log('leadUpdated');
     }
