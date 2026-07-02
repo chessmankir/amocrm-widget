@@ -8,6 +8,7 @@ import { AmoEntity } from '../../core/enums/amo-entity.enum';
 import { AmoCustomFieldRDO } from '../custom-field/RDO/custom-field.rdo';
 import { AmoCreateCustomField } from '../custom-field/types/custom-field.type';
 import { AmoCustomFieldType } from '../custom-field/types/custom-field.enum';
+import { createCustomFieldValue } from '../../core/helpers/create-custom-field-value';
 
 @Injectable()
 export class AmoService {
@@ -126,11 +127,6 @@ export class AmoService {
         fieldId: number,
         value: number
     ): Promise<void> {
-        console.log(subdomain, 'subdomain');
-        console.log(accessToken, 'accessToken');
-        console.log(contactId, 'contactId');
-        console.log(fieldId, 'fieldId');
-        console.log(value, 'value');
         const url = `https://${subdomain}.amocrm.ru/api/v4/contacts`;
         try {
             await axios.patch(
@@ -138,12 +134,7 @@ export class AmoService {
                 [
                     {
                         id: contactId,
-                        custom_fields_values: [
-                            {
-                                field_id: fieldId,
-                                values: [{ value: value }],
-                            },
-                        ],
+                        custom_fields_values: [createCustomFieldValue(fieldId, value)],
                     },
                 ],
                 {
@@ -160,6 +151,5 @@ export class AmoService {
                 console.log(JSON.stringify(error.response?.data, null, 2));
             }
         }
-
     }
 }

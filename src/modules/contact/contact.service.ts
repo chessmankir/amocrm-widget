@@ -7,6 +7,7 @@ import { ContactAddedWebhookDTO, ContactUpdatedWebhookDTO } from './DTO/contact.
 import { ContactWebhookRDO } from './RDO/contact-webhook.rdo';
 import { ContactWebhook } from './types/contact.type';
 import { ContactCustomFieldName } from './constants/contact.constants';
+import { getFieldValueById } from '../../core/helpers/amo-fields';
 
 @Injectable()
 export class ContactService {
@@ -53,7 +54,7 @@ export class ContactService {
             };
         }
 
-        const birthdayTimestamp = this.getFieldValueById(contact, birthdayField.fieldId);
+        const birthdayTimestamp = getFieldValueById(contact.custom_fields, birthdayField.fieldId);
 
         if (!birthdayTimestamp) {
             return {
@@ -63,7 +64,7 @@ export class ContactService {
         }
 
         const age = this.calculateAgeFromTimestamp(Number(birthdayTimestamp));
-        const currentAge = this.getFieldValueById(contact, ageField.fieldId);
+        const currentAge = getFieldValueById(contact.custom_fields, ageField.fieldId);
 
         if (Number(currentAge) === age) {
             return {
@@ -82,22 +83,6 @@ export class ContactService {
             contactId: Number(contact.id),
             age,
         };
-    }
-
-    private getFieldValueById(contact: ContactWebhook, fieldId: number): string | number | null {
-        const field = contact.custom_fields?.find((customField) => Number(customField.id) === fieldId);
-
-        const value = field?.values?.[0];
-
-        if (typeof value === 'string' || typeof value === 'number') {
-            return value;
-        }
-
-        if (value && typeof value === 'object' && 'value' in value) {
-            return value.value as string | number;
-        }
-
-        return null;
     }
 
     private calculateAgeFromTimestamp(timestamp: number): number {

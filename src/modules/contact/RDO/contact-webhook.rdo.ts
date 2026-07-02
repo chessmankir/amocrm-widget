@@ -1,5 +1,3 @@
-
-
 export type ContactField = {
     id: string;
     name: string;
