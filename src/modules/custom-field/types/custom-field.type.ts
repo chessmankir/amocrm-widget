@@ -5,6 +5,13 @@ export type AmoCustomField = {
     enums?: AmoCustomFieldEnumValue[];
 };
 
+export type CreateCustomFieldValue = {
+    field_id: number;
+    values: {
+        value: string | number;
+    }[];
+};
+
 export type AmoCreateCustomField = {
     name: string;
     type: string;

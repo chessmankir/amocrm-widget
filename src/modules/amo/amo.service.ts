@@ -8,6 +8,7 @@ import { AmoEntity } from '../../core/enums/amo-entity.enum';
 import { AmoCustomFieldRDO } from '../custom-field/RDO/custom-field.rdo';
 import { AmoCreateCustomField } from '../custom-field/types/custom-field.type';
 import { AmoCustomFieldType } from '../custom-field/types/custom-field.enum';
+import { createCustomFieldValue } from '../../core/helpers/create-custom-field-value';
 
 @Injectable()
 export class AmoService {
@@ -99,7 +100,6 @@ export class AmoService {
                 Authorization: `Bearer ${accessToken}`,
             },
         });
-        console.log(JSON.stringify(data, null, 2));
         return data;
     }
 
@@ -117,7 +117,39 @@ export class AmoService {
                 },
             }
         );
-        console.log(data);
         return data;
+    }
+
+    public async updateContactCustomField(
+        subdomain: string,
+        accessToken: string,
+        contactId: number,
+        fieldId: number,
+        value: number
+    ): Promise<void> {
+        const url = `https://${subdomain}.amocrm.ru/api/v4/contacts`;
+        try {
+            await axios.patch(
+                url,
+                [
+                    {
+                        id: contactId,
+                        custom_fields_values: [createCustomFieldValue(fieldId, value)],
+                    },
+                ],
+                {
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json',
+                    },
+                }
+            );
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                console.dir(error.response?.data, { depth: null });
+
+                console.log(JSON.stringify(error.response?.data, null, 2));
+            }
+        }
     }
 }
