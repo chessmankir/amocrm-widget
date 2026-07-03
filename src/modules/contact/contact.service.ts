@@ -8,6 +8,7 @@ import { ContactWebhookRDO } from './RDO/contact-webhook.rdo';
 import { ContactWebhook } from './types/contact.type';
 import { ContactCustomFieldName } from './constants/contact.constants';
 import { getFieldValueById } from '../../core/helpers/amo-fields';
+import { Account } from '../accounts/account.model';
 
 @Injectable()
 export class ContactService {
@@ -29,7 +30,7 @@ export class ContactService {
         return this.processContact(body.account.subdomain, contact);
     }
 
-    private async processContact(subdomain: string, contact?: ContactWebhook): Promise<ContactWebhookRDO> {
+    public async processContact(subdomain: string, contact?: ContactWebhook): Promise<ContactWebhookRDO> {
         if (!contact) {
             return {
                 success: false,
@@ -96,6 +97,30 @@ export class ContactService {
         if (today < birthdayThisYear) {
             age--;
         }
+        return age;
+    }
+
+    public async ensureContactAge(account: Account, contact: ContactWebhook): Promise<number | null> {
+        const birthdayField = await this.customFieldRepository.findByAccountIdAndFieldName(account.id, ContactCustomFieldName.Birthday);
+        const ageField = await this.customFieldRepository.findByAccountIdAndFieldName(account.id, ContactCustomFieldName.Age);
+        if (!ageField || !birthdayField) {
+            return null;
+        }
+
+        const currentAge = getFieldValueById(contact.custom_fields_values, ageField.fieldId);
+        if (currentAge) {
+            return Number(currentAge);
+        }
+
+        const birthdayTimestamp = getFieldValueById(contact.custom_fields_values, birthdayField.fieldId);
+        if (!birthdayTimestamp) {
+            return null;
+        }
+
+        const age = this.calculateAgeFromTimestamp(Number(birthdayTimestamp));
+
+        await this.amoService.updateContactCustomField(account.subdomain, account.accessToken!, Number(contact.id), ageField.fieldId, age);
+
         return age;
     }
 }

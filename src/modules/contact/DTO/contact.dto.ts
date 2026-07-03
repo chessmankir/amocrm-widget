@@ -21,3 +21,19 @@ export type ContactUpdatedWebhookDTO = BaseContactWebhook & {
         update: ContactWebhook[];
     };
 };
+
+export type ContactRdo = {
+    id: number;
+    name: string;
+    custom_fields_values: ContactField[];
+};
+
+type ContactField = {
+    field_id: number;
+    field_name: string;
+    values: ContactFieldValue[];
+};
+
+type ContactFieldValue = {
+    value: string;
+};

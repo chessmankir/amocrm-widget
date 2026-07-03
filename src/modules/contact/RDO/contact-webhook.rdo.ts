@@ -1,6 +1,7 @@
 export type ContactField = {
     id: string;
     name: string;
+    field_id: number;
     values: ContactFieldValue[];
 };
 

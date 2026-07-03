@@ -9,6 +9,10 @@ import { AmoCustomFieldRDO } from '../custom-field/RDO/custom-field.rdo';
 import { AmoCreateCustomField } from '../custom-field/types/custom-field.type';
 import { AmoCustomFieldType } from '../custom-field/types/custom-field.enum';
 import { createCustomFieldValue } from '../../core/helpers/create-custom-field-value';
+import { Lead } from '../lead/types/lead.types';
+import { ContactWebhook } from '../contact/types/contact.type';
+import { AmoUpdateLead, CreateTaskPayload } from '../task/types/task.type';
+import { TaskAmo, TaskFilterRDO } from '../task/RDO/task.rdo';
 
 @Injectable()
 export class AmoService {
@@ -151,5 +155,132 @@ export class AmoService {
                 console.log(JSON.stringify(error.response?.data, null, 2));
             }
         }
+    }
+
+    public async getLeadWithContacts(subdomain: string, accessToken: string, leadId: number): Promise<Lead> {
+        const url = `https://${subdomain}.amocrm.ru/api/v4/leads/${leadId}?with=contacts`;
+        const { data } = await axios.get<Lead>(url, {
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+            },
+        });
+
+        return data;
+    }
+
+    public async updateLeadData(subdomain: string, accessToken: string, leadId: number, data: Partial<Lead>): Promise<void> {
+        const url = `https://${subdomain}.amocrm.ru/api/v4/leads/${leadId}?with=contacts`;
+        await axios.patch(url, data, {
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+            },
+        });
+    }
+
+    public async getContactById(subdomain: string, accessToken: string, contactId: number): Promise<ContactWebhook> {
+        const url = `https://${subdomain}.amocrm.ru/api/v4/contacts/${contactId}`;
+        const { data } = await axios.get<ContactWebhook>(url, {
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+            },
+        });
+
+        return data;
+    }
+
+    public async createTask(subdomain: string, accessToken: string, payload: CreateTaskPayload[]): Promise<void> {
+        console.log('createTask');
+        const url = `https://${subdomain}.amocrm.ru/api/v4/tasks`;
+
+        try {
+            const { data } = await axios.post(url, payload, {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                },
+            });
+        } catch (error) {
+            console.log(JSON.stringify(error.response?.data, null, 2));
+        }
+    }
+
+    public async getTaskId(subdomain: string, accessToken: string, taskId: number): Promise<TaskAmo> {
+        const url = `https://${subdomain}.amocrm.ru/api/v4/tasks/${taskId}`;
+
+        const { data } = await axios.get<TaskAmo>(url, {
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+            },
+        });
+
+        return data;
+    }
+
+    public async getTaskByLeadId(subdomain: string, accessToken: string, leadId: number): Promise<TaskFilterRDO> {
+        const url = `https://${subdomain}.amocrm.ru/api/v4/tasks`;
+
+        const { data } = await axios.get<TaskFilterRDO>(url, {
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+            },
+            params: {
+                'filter[entity_id]': leadId,
+                'filter[entity_type]': 'leads',
+            },
+        });
+
+        return data;
+    }
+
+    public async createLeadNote(subdomain: string, accessToken: string, leadId: number, text: string): Promise<void> {
+        const url = `https://${subdomain}.amocrm.ru/api/v4/leads/${leadId}/notes`;
+
+        await axios.post(
+            url,
+            [
+                {
+                    note_type: 'common',
+                    params: { text },
+                },
+            ],
+            {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                },
+            }
+        );
+    }
+
+    public async updateTask(subdomain: string, accessToken: string, taskId: number, payload: Partial<CreateTaskPayload>): Promise<void> {
+        const url = `https://${subdomain}.amocrm.ru/api/v4/tasks/${taskId}`;
+
+        await axios.patch(url, payload, {
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+            },
+        });
+    }
+
+    public async updateLead(subdomain: string, accessToken: string, leadId: number, payload: AmoUpdateLead): Promise<void> {
+        const url = `https://${subdomain}.amocrm.ru/api/v4/leads/${leadId}`;
+
+        await axios.patch(url, payload, {
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+                'Content-Type': 'application/json',
+            },
+        });
+    }
+
+    //проверка типов (для этапа разработки)
+    public async getTaskTypes(subdomain: string, accessToken: string): Promise<unknown> {
+        const url = `https://${subdomain}.amocrm.ru/api/v4/tasks/types`;
+
+        const { data } = await axios.get(url, {
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+            },
+        });
+
+        return data;
     }
 }
