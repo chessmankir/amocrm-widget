@@ -164,7 +164,6 @@ export class AmoService {
                 Authorization: `Bearer ${accessToken}`,
             },
         });
-
         return data;
     }
 
@@ -189,7 +188,6 @@ export class AmoService {
     }
 
     public async createTask(subdomain: string, accessToken: string, payload: CreateTaskPayload[]): Promise<void> {
-        console.log('createTask');
         const url = `https://${subdomain}.amocrm.ru/api/v4/tasks`;
 
         try {

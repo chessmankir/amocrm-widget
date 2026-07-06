@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { AmoService } from '../amo/amo.service';
 import { Account } from '../accounts/account.model';
 import { TaskAmo } from './RDO/task.rdo';
-import { TASKS_TITLES } from './constants/task.contstans';
+import { taskTitles } from './constants/task.contstans';
 import { Env } from '../../core/enums/env.enum';
 
 @Injectable()
@@ -20,28 +20,25 @@ export class TaskService {
         contactName: string,
         age: number
     ): Promise<void> {
-        const text = `${TASKS_TITLES.CheckBudgetPrefix} ${contactName}, возраст: ${age}`;
+        const text = `${taskTitles.CheckBudgetPrefix} ${contactName}, возраст: ${age}`;
         const typeCheckTaskId = Number(this.configService.getOrThrow<string>(Env.AmoCheckTaskTypeId));
 
-        this.createOrUpdateTask(account, leadId, responsibleUserId, typeCheckTaskId, TASKS_TITLES.CheckBudgetPrefix, text);
+        this.createOrUpdateTask(account, leadId, responsibleUserId, typeCheckTaskId, taskTitles.CheckBudgetPrefix, text);
     }
 
     public async createAgeUnknownTaskIfNotExists(account: Account, leadId: number, responsibleId: number): Promise<void> {
-        const existingTask = await this.findActiveTaskByText(account, leadId, TASKS_TITLES.AgeUnknown);
+        const existingTask = await this.findActiveTaskByText(account, leadId, taskTitles.AgeUnknown);
 
         if (existingTask) {
             return;
         }
 
         const taskErrorType = Number(this.configService.getOrThrow<string>(Env.AmoErrorTaskTypeId));
-        await this.createTask(account, leadId, responsibleId, taskErrorType, TASKS_TITLES.AgeUnknown);
+        await this.createTask(account, leadId, responsibleId, taskErrorType, taskTitles.AgeUnknown);
     }
 
     private async createTask(account: Account, leadId: number, responsibleUserId: number, taskTypeId: number, text: string): Promise<void> {
         const completeTill = Math.floor(Date.now() / 1000) + 24 * 60 * 60;
-        console.log(`taskTypeId: ${taskTypeId}`);
-        console.log(`leadId: ${leadId}`);
-        console.log(text);
         await this.amoService.createTask(account.subdomain, account.accessToken!, [
             {
                 text,
@@ -68,14 +65,14 @@ export class TaskService {
         responsibleUserId: number,
         missingServices: string[]
     ): Promise<void> {
-        const text = `${TASKS_TITLES.MissingServicesPrefix} ${missingServices.join(', ')}`;
+        const text = `${taskTitles.MissingServicesPrefix} ${missingServices.join(', ')}`;
 
         await this.createOrUpdateTask(
             account,
             leadId,
             responsibleUserId,
             Number(this.configService.getOrThrow<string>(Env.AmoErrorTaskTypeId)),
-            TASKS_TITLES.MissingServicesPrefix,
+            taskTitles.MissingServicesPrefix,
             text
         );
     }

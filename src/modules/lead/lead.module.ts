@@ -4,9 +4,10 @@ import { ContactModule } from '../contact/contact.module';
 import { AmoModule } from '../amo/amo.module';
 import { TaskModule } from '../task/task.module';
 import { AccountModule } from '../accounts/account.module';
+import { CustomFieldModule } from '../custom-field/custom-field.module';
 
 @Module({
-    imports: [ContactModule, AmoModule, TaskModule, forwardRef(() => AccountModule)],
+    imports: [ContactModule, AmoModule, TaskModule, CustomFieldModule, forwardRef(() => AccountModule)],
     providers: [LeadService],
     exports: [LeadService],
 })

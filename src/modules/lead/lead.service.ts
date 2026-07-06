@@ -4,10 +4,11 @@ import { AmoService } from '../amo/amo.service';
 import { TaskService } from '../task/task.service';
 import { LeadAddWebhookDTO, LeadUpdateWebhookDTO } from './DTO/lead.dto';
 import { Lead } from './types/lead.types';
-import { ContactRdo } from '../contact/DTO/contact.dto';
 import { Account } from '../accounts/account.model';
 import { AccountRepository } from '../accounts/account.repository';
 import { ContactWebhook } from '../contact/types/contact.type';
+import { normalizeFieldValue } from '../../core/helpers/amo-fields';
+import { CustomFieldRepository } from '../custom-field/custom-field.repository';
 
 @Injectable()
 export class LeadService {
@@ -15,7 +16,8 @@ export class LeadService {
         private readonly amoService: AmoService,
         private readonly contactService: ContactService,
         private readonly taskService: TaskService,
-        private readonly accountRepository: AccountRepository
+        private readonly accountRepository: AccountRepository,
+        private readonly customFieldRepository: CustomFieldRepository
     ) {}
 
     public async handleLeadAdded(body: LeadAddWebhookDTO): Promise<void> {
@@ -38,20 +40,32 @@ export class LeadService {
 
     private async calculateAndUpdateLeadBudget(subdomain: string, leadFromWebhook: Lead): Promise<void> {
         const leadId = Number(leadFromWebhook.id);
-        const selectedServices = this.getSelectedServicesFromLead(leadFromWebhook);
-        if (!selectedServices.length) {
-            return;
-        }
         const account = await this.accountRepository.getAmoAccount(subdomain);
         if (!account?.accessToken) {
             throw new Error('Account access not found');
         }
-        const contact = await this.getMainContactWithLead(leadId, account);
+        const selectedServices = await this.getSelectedServicesFromLead(account.id, leadFromWebhook);
+        if (!selectedServices.length) {
+            return;
+        }
 
+        const contact = await this.getMainContactWithLead(leadId, account);
         if (!contact) {
             return;
         }
-        const filledServices = this.getFilledServiceFields(selectedServices, contact);
+        const filledServices = await this.getFilledServiceFields(account.id, selectedServices, contact);
+        const missingServices = selectedServices.filter((service) => !filledServices.has(service));
+
+        if (missingServices.length) {
+            await this.taskService.createOrUpdateMissingServicesTask(
+                account,
+                leadId,
+                Number(leadFromWebhook.responsible_user_id),
+                missingServices
+            );
+
+            return;
+        }
 
         //Провека поля возраст
         const age = await this.contactService.ensureContactAge(account, contact);
@@ -60,49 +74,34 @@ export class LeadService {
             return;
         }
 
-        if (filledServices.size === selectedServices.length && selectedServices.length > 0) {
-            const budget = this.calculateBudgetByContact(selectedServices, contact);
-            const currentBudget = Number(leadFromWebhook.price ?? 0);
-            if (currentBudget === budget) {
-                return;
-            }
-            this.updateLeadBudget(subdomain, leadId, account, budget);
-            await this.taskService.createOrUpdateCheckBudgetTask(
-                account,
-                leadId,
-                Number(leadFromWebhook.responsible_user_id),
-                contact.name,
-                age!
-            );
-        } else {
-            const missingServices = selectedServices.filter((service) => !filledServices.has(service));
-            if (missingServices.length) {
-                await this.taskService.createOrUpdateMissingServicesTask(
-                    account,
-                    leadId,
-                    Number(leadFromWebhook.responsible_user_id),
-                    missingServices
-                );
-
-                return;
-            }
+        const budget = this.calculateBudgetByFilledServices(filledServices);
+        const currentBudget = Number(leadFromWebhook.price ?? 0);
+        if (currentBudget === budget) {
+            return;
         }
+        this.updateLeadBudget(subdomain, leadId, account, budget);
+        await this.taskService.createOrUpdateCheckBudgetTask(
+            account,
+            leadId,
+            Number(leadFromWebhook.responsible_user_id),
+            contact.name,
+            age!
+        );
     }
 
-    private calculateBudgetByContact(selectedServices: string[], contact: ContactRdo): number {
-        return selectedServices.reduce((sum, serviceName) => {
-            const price = this.getServicePriceFromContact(contact, serviceName);
-            return sum + price;
-        }, 0);
+    private calculateBudgetByFilledServices(filledServices: Map<string, number>): number {
+        return [...filledServices.values()].reduce((sum, price) => sum + price, 0);
     }
 
-    private getServicePriceFromContact(contact: ContactRdo, serviceName: string): number {
-        const field = contact.custom_fields_values?.find((custom_field) => custom_field.field_name === serviceName);
-        return Number(field?.values?.[0]?.value ?? 0);
-    }
-
-    private getSelectedServicesFromLead(lead: Lead): string[] {
-        const servicesField = lead.custom_fields?.find((field) => field.name === 'Услуги');
+    private async getSelectedServicesFromLead(accountId: number, lead: Lead): Promise<string[]> {
+        const fieldName = 'Услуги';
+        const customField = await this.customFieldRepository.findByAccountIdAndFieldName(accountId, fieldName);
+        if (!customField) {
+            throw new Error(`CustomField with name:${fieldName} not found`);
+        }
+        const servicesField = lead.custom_fields?.find((field) => {
+            return Number(field.id) === Number(customField.fieldId);
+        });
         return servicesField?.values?.map((service) => service.value) ?? [];
     }
 
@@ -118,17 +117,28 @@ export class LeadService {
         return contact;
     }
 
-    private getFilledServiceFields(selectedServices: string[], contact: ContactRdo): Map<string, number> {
+    private async getFilledServiceFields(
+        accountId: number,
+        selectedServices: string[],
+        contact: ContactWebhook
+    ): Promise<Map<string, number>> {
         const result: Map<string, number> = new Map<string, number>();
 
         for (const serviceName of selectedServices) {
-            const field = contact.custom_fields_values?.find((item) => item.field_name === serviceName);
-            const value = Number(field?.values?.[0]?.value ?? 0);
+            const customField = await this.customFieldRepository.findByAccountIdAndFieldName(accountId, serviceName);
+
+            if (!customField) {
+                continue;
+            }
+
+            const field = contact.custom_fields_values?.find((item) => Number(item.field_id) === Number(customField.fieldId));
+            const value = Number(normalizeFieldValue(field?.values?.[0]) ?? 0);
 
             if (!Number.isNaN(value) && value > 0) {
                 result.set(serviceName, value);
             }
         }
+
         return result;
     }
 
