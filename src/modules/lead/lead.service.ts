@@ -9,7 +9,7 @@ import { AccountRepository } from '../accounts/account.repository';
 import { ContactWebhook } from '../contact/types/contact.type';
 import { normalizeFieldValue } from '../../core/helpers/amo-fields';
 import { CustomFieldRepository } from '../custom-field/custom-field.repository';
-import { FIELD_NAME_SERVICE } from './constants/lead.contants';
+import { FIELD_NAME_SERVICE } from '../custom-field/constants/contact-fields';
 
 @Injectable()
 export class LeadService {
