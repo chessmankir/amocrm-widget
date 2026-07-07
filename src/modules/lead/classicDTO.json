@@ -1,0 +1,32 @@
+{
+    "id": "31397137",
+    "name": "Моя косметика",
+    "status_id": "86556074",
+    "price": "6000",
+    "price_with_minor_units": "6000",
+    "responsible_user_id": "13933998",
+    "last_modified": "1782996706",
+    "modified_user_id": "13933998",
+    "created_user_id": "13933998",
+    "date_create": "1782293000",
+    "pipeline_id": "11012922",
+    "account_id": "33103246",
+    "custom_fields": [
+        {
+            "id": "781973",
+            "name": "Услуги",
+            "values": [
+                {
+                    "value": "Лазерная эпиляция",
+                    "enum": "1154351"
+                }
+            ]
+        }
+    ],
+    "created_at": "1782293000",
+    "updated_at": "1782996706"
+}
+[
+    "Лазерная эпиляция"
+]
+

@@ -3,6 +3,8 @@ import { RequiredCustomField } from '../types/required-custom-field.type';
 import { AmoEntity } from '../../../core/enums/amo-entity.enum';
 import { SERVICE_OPTIONS } from './service-options';
 
+export const FIELD_NAME_SERVICE = 'Услуги';
+
 export const REQUIRED_CUSTOM_FIELDS: RequiredCustomField[] = [
     {
         name: 'Дата рождения',
@@ -40,7 +42,7 @@ export const REQUIRED_CUSTOM_FIELDS: RequiredCustomField[] = [
         entity_type: AmoEntity.Contacts,
     },
     {
-        name: 'Услуги',
+        name: FIELD_NAME_SERVICE,
         type: AmoCustomFieldType.Multiselect,
         entity_type: AmoEntity.Leads,
         enums: SERVICE_OPTIONS,

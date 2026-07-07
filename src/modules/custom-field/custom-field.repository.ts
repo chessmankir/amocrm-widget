@@ -32,13 +32,4 @@ export class CustomFieldRepository {
             },
         });
     }
-
-    public async getFieldIdByAccountIdAndFieldName(accountId: number, fieldName: string): Promise<CustomField | null> {
-        return this.repository.findOne({
-            where: {
-                accountId,
-                fieldName,
-            },
-        });
-    }
 }

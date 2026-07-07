@@ -1,10 +1,8 @@
 import { ContactField, ContactFieldValue } from '../../modules/contact/RDO/contact-webhook.rdo';
 
 export function getFieldValueById(fields: ContactField[] | null | undefined, fieldId: number): string | null {
-    const field = fields?.find((field) => Number(field.id) === fieldId);
-
+    const field = fields?.find((field) => Number(field.field_id) === Number(fieldId));
     const value = field?.values?.[0];
-
     return normalizeFieldValue(value);
 }
 

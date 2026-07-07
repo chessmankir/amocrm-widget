@@ -12,4 +12,6 @@
 | POSTGRES_USER     | string     | Пользователь PostgreSQL                                 |
 | POSTGRES_PASSWORD | string     | Пароль пользователя PostgreSQL                          |
 | POSTGRES_DB       | string     | Название базы данных PostgreSQL                         |
+| AMO_ERROR_TASK_TYPE_ID       | string     | Id типа задачи "Ошибка"                                 |
+| AMO_CHECK_TASK_TYPE_ID       | string     | Id типа задачи "Проверить"                              |
 
