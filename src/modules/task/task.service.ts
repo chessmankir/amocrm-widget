@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { AmoService } from '../amo/amo.service';
 import { Account } from '../accounts/account.model';
 import { TaskAmo } from './RDO/task.rdo';
-import { taskTitles } from './constants/task.contstans';
+import { TaskTitles } from './constants/task.contstans';
 import { Env } from '../../core/enums/env.enum';
 
 @Injectable()
@@ -20,21 +20,21 @@ export class TaskService {
         contactName: string,
         age: number
     ): Promise<void> {
-        const text = `${taskTitles.CheckBudgetPrefix} ${contactName}, возраст: ${age}`;
+        const text = `${TaskTitles.CheckBudgetPrefix} ${contactName}, возраст: ${age}`;
         const typeCheckTaskId = Number(this.configService.getOrThrow<string>(Env.AmoCheckTaskTypeId));
 
-        this.createOrUpdateTask(account, leadId, responsibleUserId, typeCheckTaskId, taskTitles.CheckBudgetPrefix, text);
+        this.createOrUpdateTask(account, leadId, responsibleUserId, typeCheckTaskId, TaskTitles.CheckBudgetPrefix, text);
     }
 
     public async createAgeUnknownTaskIfNotExists(account: Account, leadId: number, responsibleId: number): Promise<void> {
-        const existingTask = await this.findActiveTaskByText(account, leadId, taskTitles.AgeUnknown);
+        const existingTask = await this.findActiveTaskByText(account, leadId, TaskTitles.AgeUnknown);
 
         if (existingTask) {
             return;
         }
 
         const taskErrorType = Number(this.configService.getOrThrow<string>(Env.AmoErrorTaskTypeId));
-        await this.createTask(account, leadId, responsibleId, taskErrorType, taskTitles.AgeUnknown);
+        await this.createTask(account, leadId, responsibleId, taskErrorType, TaskTitles.AgeUnknown);
     }
 
     private async createTask(account: Account, leadId: number, responsibleUserId: number, taskTypeId: number, text: string): Promise<void> {
@@ -65,14 +65,14 @@ export class TaskService {
         responsibleUserId: number,
         missingServices: string[]
     ): Promise<void> {
-        const text = `${taskTitles.MissingServicesPrefix} ${missingServices.join(', ')}`;
+        const text = `${TaskTitles.MissingServicesPrefix} ${missingServices.join(', ')}`;
 
         await this.createOrUpdateTask(
             account,
             leadId,
             responsibleUserId,
             Number(this.configService.getOrThrow<string>(Env.AmoErrorTaskTypeId)),
-            taskTitles.MissingServicesPrefix,
+            TaskTitles.MissingServicesPrefix,
             text
         );
     }

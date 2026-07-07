@@ -9,6 +9,7 @@ import { AccountRepository } from '../accounts/account.repository';
 import { ContactWebhook } from '../contact/types/contact.type';
 import { normalizeFieldValue } from '../../core/helpers/amo-fields';
 import { CustomFieldRepository } from '../custom-field/custom-field.repository';
+import { FIELD_NAME_SERVICE } from './constants/lead.contants';
 
 @Injectable()
 export class LeadService {
@@ -94,10 +95,9 @@ export class LeadService {
     }
 
     private async getSelectedServicesFromLead(accountId: number, lead: Lead): Promise<string[]> {
-        const fieldName = 'Услуги';
-        const customField = await this.customFieldRepository.findByAccountIdAndFieldName(accountId, fieldName);
+        const customField = await this.customFieldRepository.findByAccountIdAndFieldName(accountId, FIELD_NAME_SERVICE);
         if (!customField) {
-            throw new Error(`CustomField with name:${fieldName} not found`);
+            throw new Error(`CustomField with name:${FIELD_NAME_SERVICE} not found`);
         }
         const servicesField = lead.custom_fields?.find((field) => {
             return Number(field.id) === Number(customField.fieldId);
