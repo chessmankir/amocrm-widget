@@ -11,4 +11,6 @@ export type AppConfigSchema = {
     [Env.PostgresPassword]: string;
     [Env.PostgresDb]: string;
     [Env.AmoWebhookBaseUrl]: string;
+    [Env.AmoCheckTaskTypeId]: string;
+    [Env.AmoErrorTaskTypeId]: string;
 };

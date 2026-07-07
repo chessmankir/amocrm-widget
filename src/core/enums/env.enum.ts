@@ -8,4 +8,6 @@ export enum Env {
     PostgresPassword = 'POSTGRES_PASSWORD',
     PostgresDb = 'POSTGRES_DB',
     AmoWebhookBaseUrl = 'AMO_WEBHOOK_BASE_URL',
+    AmoErrorTaskTypeId = 'AMO_ERROR_TASK_TYPE_ID',
+    AmoCheckTaskTypeId = 'AMO_CHECK_TASK_TYPE_ID',
 }
